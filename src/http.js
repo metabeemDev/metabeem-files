@@ -3,6 +3,7 @@ import bodyParser from 'body-parser';
 import rateLimit from 'express-rate-limit';
 import _ from 'lodash';
 import denetwork_utils from "denetwork-utils";
+
 const { ProcessUtil, WebUtil } = denetwork_utils;
 
 import 'deyml/config';
@@ -25,6 +26,7 @@ export async function runHttp()
 			}
 
 			const app = express();
+			app.disable( 'x-powered-by' );
 
 			//
 			//	Set up body-parser to parse JSON data and
@@ -39,6 +41,7 @@ export async function runHttp()
 			const globalLimiter = rateLimit( {
 				windowMs : 60 * 1000,	//	1min
 				max : 300,		//	Maximum number of requests
+				legacyHeaders : false,
 				message : `Too many requests, please try again later!`
 			} );
 			app.use( globalLimiter );

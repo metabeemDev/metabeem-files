@@ -45,6 +45,7 @@ export class ViewController extends BaseController
 				const limiter = rateLimit( {
 					windowMs : 5 * 1000,	//	1min
 					max : 5,		//	Maximum number of requests
+					legacyHeaders : false,
 					message : `Too many requests, please try again later.`
 				} );
 				app.use( this.routerView, limiter );
@@ -85,7 +86,6 @@ export class ViewController extends BaseController
 						const blobProperties = await blobClient.getProperties();
 						const createdOn = blobProperties ? blobProperties.createdOn : null;
 						const lastModified = blobProperties ? blobProperties.lastModified : null;
-						const etag = blobProperties ? blobProperties.etag : null;
 
 						const blobData = {
 							properties : {
@@ -93,7 +93,7 @@ export class ViewController extends BaseController
 								lastModified : lastModified ? lastModified.getTime() : null,
 								contentLength : blobProperties ? blobProperties.contentLength : null,
 								contentType : blobProperties ? blobProperties.contentType : null,
-								etag : StringUtil.removeDoubleQuotesAtBothEnds( etag ),
+								etag : blobProperties ? blobProperties.etag : null,
 								version : blobProperties ? blobProperties.version : null,
 							},
 							sasUrl : sasUrl,
@@ -105,11 +105,21 @@ export class ViewController extends BaseController
 					catch ( error )
 					{
 						console.error( error );
-						const response = WebUtil.getResponseObject(
-							{},
-							{ error : `Internal Server Error` }
-						);
-						res.status( 500 ).send( response );
+						const statusCode = _.get( error, `statusCode` );
+						if ( 404 === statusCode )
+						{
+							res.status( statusCode ).send( WebUtil.getResponseObject(
+								{},
+								{ error : `File Not Found` }
+							) );
+						}
+						else
+						{
+							res.status( 500 ).send( WebUtil.getResponseObject(
+								{},
+								{ error : `Internal Server Error` }
+							) );
+						}
 					}
 				} );
 

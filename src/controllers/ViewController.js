@@ -5,7 +5,6 @@ import {
 import { BaseController } from "./BaseController.js";
 import denetwork_utils from "denetwork-utils";
 import _ from "lodash";
-import { StringUtil } from "../utils/StringUtil.js";
 
 const { WebUtil } = denetwork_utils;
 

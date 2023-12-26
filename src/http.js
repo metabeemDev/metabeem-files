@@ -3,12 +3,12 @@ import bodyParser from 'body-parser';
 import rateLimit from 'express-rate-limit';
 import _ from 'lodash';
 import denetwork_utils from "denetwork-utils";
-
-const { ProcessUtil, WebUtil } = denetwork_utils;
-
-import 'deyml/config';
+const { ProcessUtil } = denetwork_utils;
 import { UploadController } from "./controllers/UploadController.js";
 import { ViewController } from "./controllers/ViewController.js";
+
+import 'deyml/config';
+
 
 const uploadController = new UploadController();
 const viewController = new ViewController();

@@ -6,6 +6,7 @@ const { WebUtil } = denetwork_utils;
 import rateLimit from "express-rate-limit";
 import { BaseController } from "./BaseController.js";
 import _ from "lodash";
+import { StringUtil } from "../utils/StringUtil.js";
 
 export class UploadController extends BaseController
 {
@@ -62,19 +63,29 @@ export class UploadController extends BaseController
 					{
 						if ( ! req.file )
 						{
-							return res.status( 400 ).send( 'No file uploaded.' );
+							return res.status( 400 ).send( 'No file uploaded' );
 						}
 
+						const extName = path.extname( req.file.originalname );
+						if ( ! StringUtil.isValidFileExtension( extName ) )
+						{
+							return res.status( 400 ).send( 'invalid file extension' );
+						}
+
+						//	...
 						const fileBuffer = req.file.buffer;
 						const sha256sum = crypto.createHash( 'sha256' )
 							.update( fileBuffer )
 							.digest( 'hex' );
-						const fileName = `${ sha256sum }${ path.extname( req.file.originalname ) }`;
+						const filename = `${ sha256sum }${ extName }`;
 
-						const blockBlobClient = this.getAzureContainerClient().getBlockBlobClient( fileName );
+						const blockBlobClient = this.getAzureContainerClient().getBlockBlobClient( filename );
 						await blockBlobClient.upload( fileBuffer, fileBuffer.length );
 
-						const response = WebUtil.getResponseObject( {}, { error : `file uploaded successfully` } );
+						const response = WebUtil.getResponseObject(
+							{ filename : filename, },
+							{ error : `file uploaded successfully` }
+						);
 						res.status( 200 ).send( response );
 					}
 					catch ( error )

@@ -1,3 +1,10 @@
+/node_modules
+/package-lock.json
+/.idea
+/coverage
+.DS_Store
+.yml
+
 # Logs
 logs
 *.log

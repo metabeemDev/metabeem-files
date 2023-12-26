@@ -1,0 +1,9 @@
+HTTP:
+  PORT : 8822
+
+OSS:
+  ACCOUNT:
+    NAME: account-name
+    KEY: account-key
+  CONTAINER:
+    NAME : container-name

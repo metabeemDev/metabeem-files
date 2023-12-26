@@ -1,0 +1,13 @@
+version: '3'
+services:
+    #   App Docker
+    metabeemFilesServer:                       # Service Name
+        container_name: metabeem-files-server
+        hostname: metabeem-files-server
+        build:
+            context: .
+        image: metabeem-files-server:latest
+        ports:
+            # 指定端口映射，类似 docker run 的 -p 选项，注意使用字符串形式
+            # [local port]:[container port]
+            - "8822:8822"

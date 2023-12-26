@@ -43,6 +43,7 @@ export class UploadController extends BaseController
 				const limiter = rateLimit( {
 					windowMs : 60 * 1000,	//	1min
 					max : 10,		//	Maximum number of requests
+					legacyHeaders : false,
 					message : `Too many requests, please try again later.`
 				} );
 				app.use( this.routerUpload, limiter );

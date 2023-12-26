@@ -3,11 +3,13 @@ import bodyParser from 'body-parser';
 import rateLimit from 'express-rate-limit';
 import _ from 'lodash';
 import denetwork_utils from "denetwork-utils";
+
 const { ProcessUtil } = denetwork_utils;
 import { UploadController } from "./controllers/UploadController.js";
 import { ViewController } from "./controllers/ViewController.js";
 
 import 'deyml/config';
+import multer from "multer";
 
 
 const uploadController = new UploadController();

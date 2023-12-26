@@ -2,6 +2,7 @@ import crypto from "crypto";
 import path from "path";
 import multer from "multer";
 import denetwork_utils from "denetwork-utils";
+
 const { WebUtil } = denetwork_utils;
 import rateLimit from "express-rate-limit";
 import { BaseController } from "./BaseController.js";
@@ -16,6 +17,9 @@ export class UploadController extends BaseController
 
 		//	...
 		this.routerUpload = `/upload`;
+
+		//	128MB
+		this.maxFileSize = 128 * 1024 * 1024;
 	}
 
 	uploadSingleFile( router, app )
@@ -55,7 +59,7 @@ export class UploadController extends BaseController
 				const storage = multer.memoryStorage();
 				const upload = multer( {
 					storage : storage,
-					limits : { fileSize : 128 * 1024 * 1024 }
+					limits : { fileSize : this.maxFileSize }
 				} );
 
 				app.post( this.routerUpload, upload.single( 'file' ), async ( req, res ) =>
@@ -80,7 +84,8 @@ export class UploadController extends BaseController
 							.digest( 'hex' );
 						const filename = `${ sha256sum }${ extName }`;
 
-						const blockBlobClient = this.getAzureContainerClient().getBlockBlobClient( filename );
+						const blockBlobClient = this.getAzureContainerClient()
+							.getBlockBlobClient( filename );
 						await blockBlobClient.upload( fileBuffer, fileBuffer.length );
 
 						const response = WebUtil.getResponseObject(
@@ -92,8 +97,29 @@ export class UploadController extends BaseController
 					catch ( error )
 					{
 						console.error( error );
-						const response = WebUtil.getResponseObject( {}, { error : `Internal Server Error` } );
-						res.status( 500 ).send( response );
+						res.status( 500 ).send( WebUtil.getResponseObject(
+							{},
+							{ error : `Internal Server Error` }
+						) );
+					}
+				}, ( err, req, res, next ) =>
+				{
+					//	Error handling middleware to handle Multer's file size exceedance error
+					if ( err instanceof multer.MulterError )
+					{
+						//	Multer error, file size exceeded
+						res.status( 400 ).send( WebUtil.getResponseObject(
+							{},
+							{ error : `File size exceeds the limit ${ this.maxFileSize / 1024 / 1024 }MB` }
+						) );
+					}
+					else
+					{
+						//	Other errors
+						res.status( 500 ).send( WebUtil.getResponseObject(
+							{},
+							{ error : `Internal Server Error` }
+						) );
 					}
 				} );
 
@@ -104,6 +130,6 @@ export class UploadController extends BaseController
 			{
 				reject( err );
 			}
-		});
+		} );
 	}
 }

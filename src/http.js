@@ -1,19 +1,14 @@
+import _ from 'lodash';
 import express from 'express';
 import bodyParser from 'body-parser';
 import rateLimit from 'express-rate-limit';
-import _ from 'lodash';
 import denetwork_utils from "denetwork-utils";
-
 const { ProcessUtil } = denetwork_utils;
-import { UploadController } from "./controllers/UploadController.js";
-import { ViewController } from "./controllers/ViewController.js";
+import { httpRoutes } from "./httpRoutes.js";
 
 import 'deyml/config';
-import multer from "multer";
 
 
-const uploadController = new UploadController();
-const viewController = new ViewController();
 
 export async function runHttp()
 {
@@ -48,9 +43,10 @@ export async function runHttp()
 			} );
 			app.use( globalLimiter );
 
-			//	...
-			await uploadController.uploadSingleFile( `/upload`, app );
-			await viewController.viewSingleFile( `/view`, app );
+			//
+			//	setup http routers
+			//
+			await httpRoutes( app );
 
 			//	...
 			app.listen( httpPort, () =>

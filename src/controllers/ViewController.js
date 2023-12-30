@@ -1,7 +1,4 @@
 import rateLimit from "express-rate-limit";
-import {
-	generateBlobSASQueryParameters,
-} from '@azure/storage-blob';
 import { BaseController } from "./BaseController.js";
 import denetwork_utils from "denetwork-utils";
 import _ from "lodash";
@@ -50,8 +47,6 @@ export class ViewController extends BaseController
 				app.use( this.routerView, limiter );
 
 				//	...
-				const containerName = this.containerName;
-
 				app.get( this.routerView, async ( req, res ) =>
 				{
 					try
@@ -60,45 +55,14 @@ export class ViewController extends BaseController
 						if ( ! _.isString( blobName ) || _.isEmpty( blobName ) )
 						{
 							return res.status( 400 ).send( WebUtil.getResponseObject(
+								400,
 								{},
 								{ error : `invalid URL parameter file` }
 							) );
 						}
 
-						//	Generate SAS token for the blob
-						const sasToken = generateBlobSASQueryParameters(
-							{
-								containerName,
-								blobName,
-								permissions : 'r', 			// 'r' for read permission, adjust as needed
-								startsOn : new Date( new Date().getTime() - 60 * 60 * 1000 ),	//	Optional: start time
-								expiresOn : new Date( new Date().getTime() + 60 * 60 * 1000 ),	//	Optional: expiry time
-							},
-							this.getAzureSharedKeyCredential()
-						).toString();
-
-						//	Create a SAS URL for the blob
-						const blobClient = this.getAzureContainerClient().getBlobClient( blobName );
-						const sasUrl = blobClient.url + '?' + sasToken;
-
-						//	Get the blob's properties to obtain the Content-Type
-						const blobProperties = await blobClient.getProperties();
-						const createdOn = blobProperties ? blobProperties.createdOn : null;
-						const lastModified = blobProperties ? blobProperties.lastModified : null;
-
-						const blobData = {
-							properties : {
-								createdOn : createdOn ? createdOn.getTime() : null,
-								lastModified : lastModified ? lastModified.getTime() : null,
-								contentLength : blobProperties ? blobProperties.contentLength : null,
-								contentType : blobProperties ? blobProperties.contentType : null,
-								etag : blobProperties ? blobProperties.etag : null,
-								version : blobProperties ? blobProperties.version : null,
-							},
-							sasUrl : sasUrl,
-						};
-
-						const response = WebUtil.getResponseObject( blobData );
+						const blobInfo = await this.azureBlobService.queryBlobInfo( blobName );
+						const response = WebUtil.getResponseObject( 200, blobInfo );
 						res.status( 200 ).send( response );
 					}
 					catch ( error )
@@ -108,6 +72,7 @@ export class ViewController extends BaseController
 						if ( 404 === statusCode )
 						{
 							res.status( statusCode ).send( WebUtil.getResponseObject(
+								404,
 								{},
 								{ error : `File Not Found` }
 							) );
@@ -115,6 +80,7 @@ export class ViewController extends BaseController
 						else
 						{
 							res.status( 500 ).send( WebUtil.getResponseObject(
+								500,
 								{},
 								{ error : `Internal Server Error` }
 							) );

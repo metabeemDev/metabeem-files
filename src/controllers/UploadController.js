@@ -1,12 +1,12 @@
+import _ from "lodash";
+import rateLimit from "express-rate-limit";
 import crypto from "crypto";
 import path from "path";
 import multer from "multer";
 import denetwork_utils from "denetwork-utils";
-
 const { WebUtil } = denetwork_utils;
-import rateLimit from "express-rate-limit";
+
 import { BaseController } from "./BaseController.js";
-import _ from "lodash";
 import { StringUtil } from "../utils/StringUtil.js";
 
 export class UploadController extends BaseController
@@ -84,20 +84,20 @@ export class UploadController extends BaseController
 							.digest( 'hex' );
 						const filename = `${ sha256sum }${ extName }`;
 
-						const blockBlobClient = this.getAzureContainerClient()
+						const blockBlobClient = this.azureBlobService.getContainerClient()
 							.getBlockBlobClient( filename );
 						await blockBlobClient.upload( fileBuffer, fileBuffer.length );
 
-						const response = WebUtil.getResponseObject(
-							{ filename : filename, },
-							{ error : `file uploaded successfully` }
-						);
+						//	...
+						const blobInfo = await this.azureBlobService.queryBlobInfo( filename );
+						const response = WebUtil.getResponseObject( 200, blobInfo );
 						res.status( 200 ).send( response );
 					}
 					catch ( error )
 					{
 						console.error( error );
 						res.status( 500 ).send( WebUtil.getResponseObject(
+							500,
 							{},
 							{ error : `Internal Server Error` }
 						) );
@@ -109,6 +109,7 @@ export class UploadController extends BaseController
 					{
 						//	Multer error, file size exceeded
 						res.status( 400 ).send( WebUtil.getResponseObject(
+							400,
 							{},
 							{ error : `File size exceeds the limit ${ this.maxFileSize / 1024 / 1024 }MB` }
 						) );
@@ -117,6 +118,7 @@ export class UploadController extends BaseController
 					{
 						//	Other errors
 						res.status( 500 ).send( WebUtil.getResponseObject(
+							500,
 							{},
 							{ error : `Internal Server Error` }
 						) );

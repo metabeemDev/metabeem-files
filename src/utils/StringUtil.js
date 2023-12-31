@@ -2,6 +2,20 @@ import _ from "lodash";
 
 export class StringUtil
 {
+	static booleanValue( value )
+	{
+		if ( _.isString( value ) )
+		{
+			value = value.trim().toLowerCase();
+			if ( 'false' === value || '0' === value )
+			{
+				return false;
+			}
+		}
+
+		return Boolean( value );
+	}
+
 	/**
 	 *	@param str	{any}
 	 *	@return {*|null}

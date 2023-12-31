@@ -2,6 +2,7 @@ import rateLimit from "express-rate-limit";
 import { BaseController } from "./BaseController.js";
 import denetwork_utils from "denetwork-utils";
 import _ from "lodash";
+import { StringUtil } from "../utils/StringUtil.js";
 
 const { WebUtil } = denetwork_utils;
 
@@ -52,6 +53,8 @@ export class ViewController extends BaseController
 					try
 					{
 						const blobName = req.query.file;
+						const redirect = StringUtil.booleanValue( req.query.rd );
+
 						if ( ! _.isString( blobName ) || _.isEmpty( blobName ) )
 						{
 							return res.status( 400 ).send( WebUtil.getResponseObject(
@@ -62,26 +65,29 @@ export class ViewController extends BaseController
 						}
 
 						const blobInfo = await this.azureBlobService.queryBlobInfo( blobName );
-						const response = WebUtil.getResponseObject( 200, blobInfo );
-						res.status( 200 ).send( response );
+						if ( redirect )
+						{
+							res.redirect( 302, blobInfo.sasUrl );
+						}
+						else
+						{
+							const response = WebUtil.getResponseObject( 200, blobInfo );
+							res.status( 200 ).send( response );
+						}
 					}
 					catch ( error )
 					{
 						console.error( error );
-						const statusCode = _.get( error, `statusCode` );
+						let statusCode = _.get( error, `statusCode` );
 						if ( 404 === statusCode )
 						{
-							res.status( statusCode ).send( WebUtil.getResponseObject(
-								404,
-								{},
+							res.status( 404 ).send( WebUtil.getResponseObject( 404, {},
 								{ error : `File Not Found` }
 							) );
 						}
 						else
 						{
-							res.status( 500 ).send( WebUtil.getResponseObject(
-								500,
-								{},
+							res.status( 500 ).send( WebUtil.getResponseObject( 500, {},
 								{ error : `Internal Server Error` }
 							) );
 						}

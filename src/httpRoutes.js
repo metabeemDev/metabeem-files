@@ -1,6 +1,7 @@
 import cors from "cors";
 import { UploadController } from "./controllers/UploadController.js";
 import { ViewController } from "./controllers/ViewController.js";
+import { IndexController } from "./controllers/IndexController.js";
 
 /**
  * @type {UploadController}
@@ -23,6 +24,12 @@ export async function httpRoutes( app )
 	//	enable CORS for allowing requests from any origin
 	//
 	app.use( cors() );
+
+	//
+	//	index
+	//
+	app.get( '/', IndexController.index );
+	app.post( '/', IndexController.index );
 
 	//
 	//	setup routers

@@ -104,6 +104,8 @@ export class UploadController extends BaseController
 					}
 				}, ( err, req, res, next ) =>
 				{
+					console.error( `uploadSingleFile post file err : `, err );
+
 					//	Error handling middleware to handle Multer's file size exceedance error
 					if ( err instanceof multer.MulterError )
 					{
@@ -130,6 +132,7 @@ export class UploadController extends BaseController
 			}
 			catch ( err )
 			{
+				console.error( `uploadSingleFile catch err : `, err );
 				reject( err );
 			}
 		} );

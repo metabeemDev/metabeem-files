@@ -7,3 +7,9 @@ OSS:
     KEY: account-key
   CONTAINER:
     NAME : container-name
+
+
+#   apm
+SW_AGENT_NAME: metabeemFile01
+SW_AGENT_INSTANCE_NAME: metabeemFile01
+SW_AGENT_COLLECTOR_BACKEND_SERVICES: 192.168.3.186:11800
